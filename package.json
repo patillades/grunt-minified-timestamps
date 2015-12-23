@@ -2,7 +2,11 @@
   "name": "grunt-minified-timestamps",
   "version": "1.0.0",
   "description": "Add a timestamp to your minified assets after they have been updated by other grunt tasks",
-  "keywords": ["timestamp", "minified", "assets"],
+  "keywords": [
+    "timestamp",
+    "minified",
+    "assets"
+  ],
   "author": {
     "name": "Xavier Lozano Carreras",
     "url": "https://github.com/patillades"
@@ -10,8 +14,16 @@
   "files": [
     "tasks"
   ],
+  "scripts": {
+    "test": "grunt test"
+  },
   "dependencies": {
     "chalk": "1.x",
     "underscore": "1.x"
+  },
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-mocha-test": "^0.12.7",
+    "mocha": "^2.3.4"
   }
 }

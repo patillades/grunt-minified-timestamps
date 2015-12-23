@@ -6,7 +6,7 @@ var chalk = require('chalk');
 module.exports = function (grunt, options) {
     'use strict';
 
-    var files = require('files')(grunt, options);
+    var files = require('./files')(grunt, options);
 
     /**
      * Run a regular expression recursively against the contents of a file and get all the asset paths matching it
