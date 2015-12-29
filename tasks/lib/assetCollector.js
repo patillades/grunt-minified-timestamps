@@ -13,20 +13,23 @@ module.exports = function (grunt, options) {
      *
      * @param {RegExp} regex
      * @param {String} content
-     * @param {Array} assets
+     * @param {Array} assets Optional, when not provided (the initial call) it defaults to an empty array
      *
      * @returns {Array} Strings with all the found asset paths
      */
     var getAssets = function(regex, content, assets) {
+        if (typeof assets === 'undefined') {
+            assets = [];
+        }
+
         var result = regex.exec(content);
 
         if (result === null) {
             return assets;
         }
 
-        // position 2 on the result array is the 2nd capturing parenthesis of the regex,
-        // the one with the asset path
-        assets.push(result[2]);
+        // position 1 on the result array is the first capturing parenthesis of the regex, the one with the asset path
+        assets.push(result[1]);
 
         // run the regular expression on the file as long as it finds matches
         // (since the regexps have the global "g" flag set)
@@ -60,7 +63,7 @@ module.exports = function (grunt, options) {
 
         // run all the regexes to get the assets on the template
         var fileAssetsArr = options.regExps.map(function (regExp) {
-            return getAssets(regExp, content, []);
+            return getAssets(regExp, content);
         });
 
         // fileAssetsArr is an array of arrays, so flatten it to an array of depth one
@@ -81,6 +84,8 @@ module.exports = function (grunt, options) {
     };
 
     return {
+        // only returned for testing purposes
+        getAssets: getAssets,
         getAssetsInfo: getAssetsInfo
     };
 };

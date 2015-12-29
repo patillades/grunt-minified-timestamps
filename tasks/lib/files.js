@@ -61,31 +61,50 @@ module.exports = function (grunt, options) {
     };
 
     /**
-     * Check whether the asset path is a helper call used on the symfony templates
-     * (f.ex. {{ asset('relative/file/path') }}) and resolve it with the assetPath defined on the options
+     * Tell whether an asset is external to the file system, checking if it starts by "http", "https", or "//"
      *
-     * If it's not a helper call, leave it as it is
+     * @param {String} path
+     * @returns {boolean}
+     */
+    var isExternal = function (path) {
+        return /^(http(s)?:)?\/\//.test(path);
+    };
+
+    /**
+     * If the asset path is a helper call used on the symfony templates (e.g. {{ asset('relative/file/path') }}),
+     * get the real path out of it. Otherwise, return the path as it is
+     *
+     * @param {String} path
+     * @returns {String}
+     */
+    var getPathFromSymfonyAssetCall = function (path) {
+        var result = /^{{\s*asset\(['"](.+)['"]\)\s*}}$/i.exec(path);
+
+        if (result === null) {
+            return path;
+        }
+
+        return result[1];
+    };
+
+    /**
+     * Translate the asset path found on the template, to the path relative to the Gruntfile. Ignore external files
+     * and get the asset path from symfony helper calls if needed
      *
      * @param {String} path The asset path as found on the template
-     *
      * @returns {String} The real asset path on the filesystem (relative to the Grunfile)
      */
     var resolveAssetPath = function(path) {
         // external files don't need to be resolved
-        if (path.indexOf('//') === 0 || path.indexOf('http') === 0) {
+        if (isExternal(path)) {
             return path;
         }
 
-        var result = /^{{\s*asset\(['"](.+)['"]\)\s*}}$/i.exec(path);
-
-        // assets using the symfony helper call
-        if (result !== null) {
-            return options.assetPath + result[1];
-        }
+        var cleanPath = getPathFromSymfonyAssetCall(path);
 
         // add the asset path and make sure there are no double slashes
-        // (happens when the asset is declared with src="/file.ext")
-        return (options.assetPath + path).replace('//', '/');
+        // (happens when the asset is declared like src="/file.ext")
+        return (options.assetPath + cleanPath).replace('//', '/');
     };
 
     /**
@@ -155,8 +174,10 @@ module.exports = function (grunt, options) {
 
     return {
         details: details,
+        getInfo: getInfo,
         deleteOld: deleteOld,
         timestamp: timestamp,
-        getInfo: getInfo
+        // only returned for testing purposes
+        resolveAssetPath: resolveAssetPath
     };
 };

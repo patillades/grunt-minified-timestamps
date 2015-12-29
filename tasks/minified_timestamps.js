@@ -27,21 +27,28 @@ module.exports = function(grunt) {
         // Merge task-specific and/or target-specific options with default values provided on a plain object
         var options = this.options({
             // path where the assets are located, relative to the Gruntfile dir
-            assetPath: '/'
+            assetPath: '/',
+            // the default values are provided below, so they don't get overwritten
+            regExps: []
         });
+
+        // concat the default regular expressions to any that might be provided by the task
+        options.regExps = options.regExps.concat([
+            // get the content of "src", the decimal point is there to match other attributes (e.g. type)
+            /<script.+src="(.+?)"/gi,
+            // get the content of "href", the decimal point is there to match other attributes (e.g. rel, media)
+            /<link.+href="(.+?)"/gi
+        ]);
 
         // load modules
         assetCollector = require('./lib/assetCollector')(grunt, options);
         files = require('./lib/files')(grunt, options);
         timestamp = require('./lib/timestamp')(grunt, options);
 
-        // store value that can't be reached inside the map function
-        // the targets are the different configuration values defined on the task (f. ex. "default" and "spa")
-        var target = this.target;
-
-        // for each task target, build a relational array whose keys are the templates containing assets
+        // for each task target (the different configuration values defined on the task, e.g. "default" or "spa"),
+        // build a relational array whose keys are the templates containing assets
         // (the files specified in the "src" parameter of the mapping), with the information of those assets as values
-        assets[target] = _.object(
+        assets[this.target] = _.object(
             this.filesSrc,
             this.filesSrc.map(assetCollector.getAssetsInfo)
         );

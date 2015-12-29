@@ -1,12 +1,12 @@
+/* global module */
+
 module.exports = {
     // path where the assets are located, relative to the Gruntfile dir
     assetPath: 'test/fixtures/',
-    // one regular expression for js and the other 2 for css assets, the
-    // real information is between one optional {{ statics_path }} field
-    // and one optional query string
     regExps: [
-        /<script src="({{\s*statics_path\s*}})?\s*(.+?)(\?.+)?"><\/script>/gi,
-        /<link rel="stylesheet" href="({{\s*statics_path\s*}})?\s*(.+?)(\?.+)?"\s*\/>/gi,
-        /<link href="({{\s*statics_path\s*}})?\s*(.+?)(\?.+)?" (media=".+" )?rel="stylesheet"\s*\/>/gi
+        // get the content of "src", the decimal point is there to match other attributes (e.g. type)
+        /<script.+src="(.+?)"/gi,
+        // get the content of "href", the decimal point is there to match other attributes (e.g. rel, media)
+        /<link.+href="(.+?)"/gi
     ]
 };
