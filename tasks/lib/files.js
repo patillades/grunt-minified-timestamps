@@ -20,10 +20,17 @@ module.exports = function (grunt, options) {
         var stats;
         var content;
 
+        if (isExternal(path)) {
+            grunt.log.writeln('  - No info for external file: ' + chalk.yellow(path));
+
+            return null;
+        }
+
         var assetPath = resolveAssetPath(path);
 
         // remove the timestamp (if there's one) to check if the parent file has been updated on the minification tasks
-        var realPath = assetPath.replace(/min\.\d+\./, 'min.');
+        // e.g. gruntfile/relative/path/style.min.123.css -> gruntfile/relative/path/style.min.css
+        var realPath = assetPath.replace(/\.min\.\d+\./, '.min.');
 
         // try/catch because an exception is thrown for files not found
         try {
@@ -45,18 +52,8 @@ module.exports = function (grunt, options) {
                 realPath: realPath
             };
         } catch (e) {
-            // file not found (external scripts, f. ex.)
-            // check if the file not found is external (with a path like //www.example.com...)
-            var external = /^\/\//.test(realPath);
-
-            if (external) {
-                grunt.log.writeln('  - No info for external file: ' + chalk.yellow(realPath));
-
-                return null;
-            } else {
-                // abort immediately if an asset is not found
-                grunt.fatal('File not found: ' + realPath, 3);
-            }
+            // abort immediately if an asset is not found
+            grunt.fatal('File not found: ' + realPath, 3);
         }
     };
 
@@ -68,6 +65,21 @@ module.exports = function (grunt, options) {
      */
     var isExternal = function (path) {
         return /^(http(s)?:)?\/\//.test(path);
+    };
+
+    /**
+     * Translate the asset path found on the template, to the path relative to the Gruntfile.
+     * Get the asset path from symfony helper calls if they are used
+     *
+     * @param {String} path The asset path as found on the template
+     * @returns {String} The real asset path on the filesystem (relative to the Grunfile)
+     */
+    var resolveAssetPath = function(path) {
+        var cleanPath = getPathFromSymfonyAssetCall(path);
+
+        // add the asset path and make sure there are no double slashes
+        // (happens when the asset is declared like src="/file.ext")
+        return (options.assetPath + cleanPath).replace('//', '/');
     };
 
     /**
@@ -85,26 +97,6 @@ module.exports = function (grunt, options) {
         }
 
         return result[1];
-    };
-
-    /**
-     * Translate the asset path found on the template, to the path relative to the Gruntfile. Ignore external files
-     * and get the asset path from symfony helper calls if needed
-     *
-     * @param {String} path The asset path as found on the template
-     * @returns {String} The real asset path on the filesystem (relative to the Grunfile)
-     */
-    var resolveAssetPath = function(path) {
-        // external files don't need to be resolved
-        if (isExternal(path)) {
-            return path;
-        }
-
-        var cleanPath = getPathFromSymfonyAssetCall(path);
-
-        // add the asset path and make sure there are no double slashes
-        // (happens when the asset is declared like src="/file.ext")
-        return (options.assetPath + cleanPath).replace('//', '/');
     };
 
     /**
