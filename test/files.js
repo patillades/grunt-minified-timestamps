@@ -59,8 +59,21 @@ describe('files library', function () {
             assert.deepEqual(result, false);
         });
 
-        //it('ass', function () {
-        //    assert(1);
-        //});
+        it('should return FALSE on unexisting parent minified file', function () {
+            var file = 'has_no_parent.min.123.js';
+
+            var result = files.getInfo(file);
+
+            assert.deepEqual(result, false);
+        });
+
+        it('should return info object if file exists', function () {
+            var file = 'empty.js';
+
+            var result = files.getInfo(file);
+
+            assert.deepEqual(result.content, '');
+            assert.deepEqual(result.realPath, options.assetPath + file);
+        });
     })
 });

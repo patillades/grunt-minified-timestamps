@@ -12,7 +12,7 @@ module.exports = function (grunt, options) {
      *
      * @param {String} path The path of an asset file
      *
-     * @returns {Object|null|false} NULL if an external file was not found.
+     * @returns {Object|null|boolean} NULL if an external file was not found.
      * FALSE if a file was not fund on the system.
      * If so, an object with "mtime" ({Date} Time when file data last modified), "content" (file content),
      * and "realPath" (the parent minified file path) properties
@@ -29,11 +29,9 @@ module.exports = function (grunt, options) {
 
         var assetPath = resolveAssetPath(path);
 
-        // make sure that the (potentially timestamped) asset file exists
+        // make sure that the asset file exists
         if (!grunt.file.exists(assetPath)) {
-            grunt.log.writeln(chalk.red('Asset not found: ' + assetPath +
-                '. Check that the timestamp on the template matches the one on the file system'
-            ));
+            grunt.log.writeln(chalk.red('Asset not found: ' + assetPath));
 
             grunt.event.emit('fileMissing');
 
@@ -45,7 +43,7 @@ module.exports = function (grunt, options) {
         // e.g. gruntfile/relative/path/style.min.123.css -> gruntfile/relative/path/style.min.css
         var realPath = assetPath.replace(/\.min\.\d+\./, '.min.');
 
-        // try/catch because an exception is thrown for files not found
+        // try/catch because an exception is thrown for files not found (checked once for assetPath, now for realPath)
         try {
             // get file info
             stats = fs.statSync(realPath);
@@ -59,7 +57,7 @@ module.exports = function (grunt, options) {
                 realPath: realPath
             };
         } catch (e) {
-            grunt.log.writeln(chalk.red('Asset not found: ' + assetPath));
+            grunt.log.writeln(chalk.red('Asset not found: ' + realPath));
 
             grunt.event.emit('fileMissing');
 
@@ -156,7 +154,7 @@ module.exports = function (grunt, options) {
             file.dir + '\/' + file.fileWoutExtension.replace('.', '\\.') + '\\.\\d+\\.' + file.extension
         );
 
-        grunt.file.recurse(file.dir, function (abspath, rootdir, subdir, filename) {
+        grunt.file.recurse(file.dir, function (abspath) {
             if (regex.test(abspath)) {
                 grunt.log.writeln('    - Deleting old timestamped file: ' + chalk.red(abspath));
 
