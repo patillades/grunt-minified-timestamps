@@ -12,7 +12,7 @@ module.exports = function (grunt, options) {
      *
      * @param {String} path The path of an asset file
      *
-     * @returns {Object|boolean} FALSE if the path belongs to an external file, or if a file was not fund on the system;
+     * @returns {Object|boolean} FALSE if the path belongs to an external file, or if a file was not found on the system;
      * in that second case, emit a "fileMissing" event so the main task can abort with a fatal error.
      * When the file is found, an object with "mtime" ({Date} Time when file data last modified),
      * "content" (file content), and "realPath" (if the asset is timestamped, the parent minified file path) properties

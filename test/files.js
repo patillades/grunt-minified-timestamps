@@ -75,5 +75,13 @@ describe('files library', function () {
             assert.deepEqual(result.content, '');
             assert.deepEqual(result.realPath, options.assetPath + file);
         });
+
+        it('should return non-timestamped info object if file exists', function () {
+            var file = 'empty.min.123.js';
+
+            var result = files.getInfo(file);
+
+            assert.deepEqual(result.realPath, options.assetPath + 'empty.min.js');
+        });
     })
 });
