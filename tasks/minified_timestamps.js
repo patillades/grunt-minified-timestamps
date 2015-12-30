@@ -24,6 +24,11 @@ module.exports = function(grunt) {
         'Automatically update the version timestamps on the request for js and css minified files of your HTML templates',
         function()
     {
+        grunt.event.on(
+            'fileMissing',
+            grunt.fatal.bind(null, 'Check for missing files', 3)
+        );
+
         // Merge task-specific and/or target-specific options with default values provided on a plain object
         var options = this.options({
             // path where the assets are located, relative to the Gruntfile dir
@@ -58,6 +63,11 @@ module.exports = function(grunt) {
         'Automatically update the version timestamps on the request for js and css minified files of your HTML templates',
         function()
     {
+        grunt.event.on(
+            'fileMissing',
+            grunt.fatal.bind(null, 'Check for missing files', 3)
+        );
+
         var target = this.target;
         // keep the details of the assets as they are updated, cause they might be present in more than one template
         var updated = {};
@@ -75,10 +85,8 @@ module.exports = function(grunt) {
             _.each(tplAssets, function (oldInfo, assetPath) {
                 var info = files.getInfo(assetPath);
 
-                if (info === null) {
-                    grunt.fatal('The file has been deleted', assetPath);
                 // compare current file contents against the ones stored on the 'minified_timestamps_getinfo' task,
-                } else if (info.content !== oldInfo.content) {
+                if (info.content !== oldInfo.content) {
                     grunt.log.ok('This asset has changed: ' + chalk.green(assetPath));
 
                     // check if the asset has already been updated on another template before updating its timestamp

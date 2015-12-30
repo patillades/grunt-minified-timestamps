@@ -75,7 +75,7 @@ module.exports = function (grunt, options) {
             fileAssets.map(files.getInfo)
         );
 
-        // filter out the assets whose value is NULL (that is, external assets not found on the filesystem)
+        // filter out the assets whose value is NULL (external assets)
         var cleanData = _.pick(data, function (value, key, object) {
             return value !== null;
         });

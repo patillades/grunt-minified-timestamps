@@ -12,8 +12,9 @@ module.exports = function (grunt, options) {
      *
      * @param {String} path The path of an asset file
      *
-     * @returns {Object|null} NULL if the file was not found. If so, an object with "mtime"
-     * ({Date} Time when file data last modified), "content" (file content),
+     * @returns {Object|null|false} NULL if an external file was not found.
+     * FALSE if a file was not fund on the system.
+     * If so, an object with "mtime" ({Date} Time when file data last modified), "content" (file content),
      * and "realPath" (the parent minified file path) properties
      */
     var getInfo = function (path) {
@@ -28,7 +29,19 @@ module.exports = function (grunt, options) {
 
         var assetPath = resolveAssetPath(path);
 
-        // remove the timestamp (if there's one) to check if the parent file has been updated on the minification tasks
+        // make sure that the (potentially timestamped) asset file exists
+        if (!grunt.file.exists(assetPath)) {
+            grunt.log.writeln(chalk.red('Asset not found: ' + assetPath +
+                '. Check that the timestamp on the template matches the one on the file system'
+            ));
+
+            grunt.event.emit('fileMissing');
+
+            return false;
+        }
+
+        // remove the timestamp (if there's one) to get the info on the parent file;
+        // this way we can compare if a file has been updated on the minification tasks
         // e.g. gruntfile/relative/path/style.min.123.css -> gruntfile/relative/path/style.min.css
         var realPath = assetPath.replace(/\.min\.\d+\./, '.min.');
 
@@ -36,12 +49,6 @@ module.exports = function (grunt, options) {
         try {
             // get file info
             stats = fs.statSync(realPath);
-
-            // be sure that the timestamped file exists
-            if (!grunt.file.exists(assetPath)) {
-                // abort immediately if an asset is not found
-                grunt.fatal('Asset not found: ' + assetPath + '. Check that the timestamp on the template matches the one on the file system', 3);
-            }
 
             // get file contents
             content = grunt.file.read(realPath);
@@ -52,8 +59,11 @@ module.exports = function (grunt, options) {
                 realPath: realPath
             };
         } catch (e) {
-            // abort immediately if an asset is not found
-            grunt.fatal('File not found: ' + realPath, 3);
+            grunt.log.writeln(chalk.red('Asset not found: ' + assetPath));
+
+            grunt.event.emit('fileMissing');
+
+            return false;
         }
     };
 

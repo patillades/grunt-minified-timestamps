@@ -9,14 +9,6 @@ var files = require('./../tasks/lib/files')(grunt, options);
 
 describe('files library', function () {
     describe('resolveAssetPath function', function () {
-        //it('should leave external assets as they are', function () {
-        //    var external = '//maps.googleapis.com/maps/api/js';
-        //
-        //    var result = files.resolveAssetPath(external);
-        //
-        //    assert.deepEqual(result, external);
-        //});
-
         it('should extract the asset path from symfony helper function', function () {
             var helper = "{{ asset('empty.css') }}";
 
@@ -49,4 +41,26 @@ describe('files library', function () {
             assert.deepEqual(result, options.assetPath + 'empty.css');
         });
     });
+
+    describe('getInfo function', function () {
+        it('should return NULL on external assets', function () {
+            var external = '//maps.googleapis.com/maps/api/js';
+
+            var result = files.getInfo(external);
+
+            assert.deepEqual(result, null);
+        });
+
+        it('should return FALSE on unexisting file', function () {
+            var file = 'unexisting.js';
+
+            var result = files.getInfo(file);
+
+            assert.deepEqual(result, false);
+        });
+
+        //it('ass', function () {
+        //    assert(1);
+        //});
+    })
 });
