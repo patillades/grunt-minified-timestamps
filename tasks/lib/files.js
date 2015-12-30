@@ -12,19 +12,16 @@ module.exports = function (grunt, options) {
      *
      * @param {String} path The path of an asset file
      *
-     * @returns {Object|null|boolean} NULL if an external file was not found.
-     * FALSE if a file was not fund on the system.
-     * If so, an object with "mtime" ({Date} Time when file data last modified), "content" (file content),
-     * and "realPath" (the parent minified file path) properties
+     * @returns {Object|boolean} FALSE if the path belongs to an external file, or if a file was not fund on the system;
+     * in that second case, emit a "fileMissing" event so the main task can abort with a fatal error.
+     * When the file is found, an object with "mtime" ({Date} Time when file data last modified),
+     * "content" (file content), and "realPath" (if the asset is timestamped, the parent minified file path) properties
      */
     var getInfo = function (path) {
-        var stats;
-        var content;
-
         if (isExternal(path)) {
             grunt.log.writeln('  - No info for external file: ' + chalk.yellow(path));
 
-            return null;
+            return false;
         }
 
         var assetPath = resolveAssetPath(path);
@@ -46,14 +43,11 @@ module.exports = function (grunt, options) {
         // try/catch because an exception is thrown for files not found (checked once for assetPath, now for realPath)
         try {
             // get file info
-            stats = fs.statSync(realPath);
-
-            // get file contents
-            content = grunt.file.read(realPath);
+            var stats = fs.statSync(realPath);
 
             return {
                 mtime: stats.mtime,
-                content: content,
+                content: grunt.file.read(realPath),
                 realPath: realPath
             };
         } catch (e) {

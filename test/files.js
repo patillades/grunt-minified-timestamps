@@ -48,7 +48,7 @@ describe('files library', function () {
 
             var result = files.getInfo(external);
 
-            assert.deepEqual(result, null);
+            assert.deepEqual(result, false);
         });
 
         it('should return FALSE on unexisting file', function () {
