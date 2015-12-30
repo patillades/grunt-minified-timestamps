@@ -43,14 +43,17 @@ module.exports = function (grunt, options) {
      * be getting assets, it can be an absolute path or relative to the path
      * of the Gruntfile being executed
      *
-     * @returns {Object} Relational array where the keys are asset paths and the values objects with
-     * "mtime" (date of the file) and "content" properties.
+     * @returns {Object|boolean} FALSE if the template was not found on the system, emit a "fileMissing" event
+     * so the main task can abort with a fatal error.
+     * Otherwise, relational array where the keys are asset paths and the values objects with
+     * "mtime" (date of the file), "content" and "realPath" properties.
      *
      * Example:
      * {
      *   '/spa/css/style.landscape.min.1443003259344.css': {
      *     mtime: Wed Sep 23 2015 15:47:27 GMT+0200 (CEST),
-     *     content: '.logo{display:none}...'
+     *     content: '.logo{display:none}...',
+     *     realPath: '/spa/css/style.landscape.min.css'
      *   },
      *   ...
      * }
@@ -58,8 +61,16 @@ module.exports = function (grunt, options) {
     var getAssetsInfo = function(filepath) {
         grunt.log.writeln('Looking for assets on file: ' + chalk.cyan(filepath));
 
-        // get the template's HTML content
-        var content = grunt.file.read(filepath);
+        try {
+            // get the template's HTML content
+            var content = grunt.file.read(filepath);
+        } catch (e) {
+            grunt.log.writeln(chalk.red('Template not found: ' + filepath));
+
+            grunt.event.emit('fileMissing');
+
+            return false;
+        }
 
         // run all the regexes to get the assets on the template
         var fileAssetsArr = options.regExps.map(function (regExp) {
@@ -69,7 +80,7 @@ module.exports = function (grunt, options) {
         // fileAssetsArr is an array of arrays, so flatten it to an array of depth one
         var fileAssets = _.flatten(fileAssetsArr);
 
-        // build an object of the form "assetPath" => info ({mtime, content})
+        // build an object of the form "assetPath" => info ({mtime, content, realPath})
         var data = _.object(
             fileAssets,
             fileAssets.map(files.getInfo)
