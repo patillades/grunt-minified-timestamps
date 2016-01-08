@@ -102,6 +102,19 @@ module.exports = function (grunt, options) {
     };
 
     /**
+     * Compare the updated info of an asset to see if it has changed compared to the provided data
+     *
+     * @param {Object} oldInfo File information object, of the kind returned by the "getInfo" function
+     * @param {String} path The path of the asset file
+     * @returns {boolean}
+     */
+    var hasChanged = function (oldInfo, path) {
+        var info = getInfo(path);
+
+        return info.content !== oldInfo.content;
+    };
+
+    /**
      * Return the details of a file
      *
      * @param {String} path
@@ -171,6 +184,7 @@ module.exports = function (grunt, options) {
         getInfo: getInfo,
         deleteOld: deleteOld,
         timestamp: timestamp,
+        hasChanged: hasChanged,
         // only returned for testing purposes
         resolveAssetPath: resolveAssetPath
     };

@@ -31,7 +31,7 @@ module.exports = function(grunt) {
 
         // Merge task-specific and/or target-specific options with default values provided on a plain object
         var options = this.options({
-            // path where the assets are located, relative to the Gruntfile dir
+            // path where the assets are located, relative to the Gruntfile dir; it must always end in "/"
             assetPath: '/',
             // the default values are provided below, so they don't get overwritten
             regExps: []

@@ -4,11 +4,17 @@ module.exports = function(grunt) {
     // Project configuration.
     grunt.initConfig({
         mochaTest: {
-            test: {
+            getInfo: {
                 options: {
                     reporter: 'spec'
                 },
-                src: ['test/*.js']
+                src: ['test/assetCollector.js', 'test/files.js']
+            },
+            updateInfo: {
+                options: {
+                    reporter: 'spec'
+                },
+                src: ['test/update.js']
             }
         }
     });
@@ -18,7 +24,5 @@ module.exports = function(grunt) {
 
     grunt.loadNpmTasks('grunt-mocha-test');
 
-    // Whenever the "test" task is run, first clean the "tmp" dir, then run this
-    // plugin's task(s), then test the result.
-    grunt.registerTask('test', ['mochaTest']);
+    grunt.registerTask('test', ['mochaTest:getInfo', 'mochaTest:updateInfo']);
 };

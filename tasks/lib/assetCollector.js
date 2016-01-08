@@ -94,9 +94,29 @@ module.exports = function (grunt, options) {
         return cleanData;
     };
 
+    /**
+     * Filter a list of assets to the ones that have been updated
+     *
+     * @param {Object} assets Associative array of assets, of the kind returned by the "getAssetsInfo" function
+     * @returns {Array} The paths of the updated assets
+     */
+    var getUpdatedAssets = function (assets) {
+        var updated = [];
+
+        for (var asset in assets) {
+            if (files.hasChanged(assets[asset], asset)) {
+                updated.push(asset);
+            }
+        }
+
+        // @todo maybe it's better to return the whole object
+        return updated;
+    };
+
     return {
         // only returned for testing purposes
         getAssets: getAssets,
-        getAssetsInfo: getAssetsInfo
+        getAssetsInfo: getAssetsInfo,
+        getUpdatedAssets: getUpdatedAssets
     };
 };
