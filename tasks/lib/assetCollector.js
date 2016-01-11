@@ -95,22 +95,41 @@ module.exports = function (grunt, options) {
     };
 
     /**
-     * Filter a list of assets to the ones that have been updated
+     * Take the assets on a given template and filter them to the ones that have been updated
      *
-     * @param {Object} assets Associative array of assets, of the kind returned by the "getAssetsInfo" function
-     * @returns {Array} The paths of the updated assets
+     * @param {Object} assetsInfo Associative array of assets, of the kind returned by the "getAssetsInfo" function
+     * @param {String} tplPath Path of the template where the assets' sources will be updated
+     * @returns {Array} The paths of the updated assets, as they are written on the template
      */
-    var getUpdatedAssets = function (assets) {
+    var getUpdatedAssets = function (assetsInfo, tplPath) {
+        grunt.log.writeln('Looking for assets\' changes on file: ' + chalk.cyan(tplPath));
+
         var updated = [];
 
-        for (var asset in assets) {
-            if (files.hasChanged(assets[asset], asset)) {
-                updated.push(asset);
+        for (var assetPath in assetsInfo) {
+            if (files.hasChanged(assetsInfo[assetPath], assetPath)) {
+                grunt.log.ok('This asset has changed: ' + chalk.green(assetPath));
+
+                updated.push(assetPath);
             }
         }
 
-        // @todo maybe it's better to return the whole object
         return updated;
+    };
+
+    /**
+     * Check if a template contains updated assets, and update their sources
+     *
+     * @param {Array} updatedAssets Assets that have been updated and need a new timestamped source on the template
+     * @param {Object} assetsInfo Associative array of assets, of the kind returned by the "getAssetsInfo" function
+     * @param {String} tplPath Path of the template where the assets' sources will be updated
+     */
+    var updateAssetPaths = function (updatedAssets, assetsInfo, tplPath) {
+        for (var assetPath in assetsInfo) {
+            if (_.contains(updatedAssets, assetPath)) {
+                files.updateAssetOnTemplate(tplPath, assetPath);
+            }
+        }
     };
 
     return {

@@ -16,7 +16,6 @@ module.exports = function(grunt) {
     // external modules
     var assetCollector;
     var files;
-    var timestamp;
     // object that stores the various asset files found on each target
     var assets = {};
 
@@ -48,7 +47,6 @@ module.exports = function(grunt) {
         // load modules
         assetCollector = require('./lib/assetCollector')(grunt, options);
         files = require('./lib/files')(grunt, options);
-        timestamp = require('./lib/timestamp')(grunt, options);
 
         // for each task target (the different configuration values defined on the task, e.g. "default" or "spa"),
         // build a relational array whose keys are the templates containing assets
@@ -68,41 +66,20 @@ module.exports = function(grunt) {
             grunt.fatal.bind(null, 'Check for missing files', 3)
         );
 
-        var target = this.target;
-        // keep the details of the assets as they are updated, cause they might be present in more than one template
-        var updated = {};
-
         grunt.log.subhead('Looking for changes since the ' + chalk.underline('"minified_timestamps_getinfo"') + ' task');
 
-        // iterate through each template on the target
-        // @todo rewrite this double loop, double if-else in a nicer way
-        this.filesSrc.forEach(function (tplPath) {
-            grunt.log.writeln('Looking for assets\' changes on file: ' + chalk.cyan(tplPath));
+        // get the updated assets on all the templates of this target
+        var updatedAssets = _.each(assets[this.target], assetCollector.getUpdatedAssets);
+        // remove duplicates
+        var uniqUpdatedAssets = _.uniq(updatedAssets);
 
-            var tplAssets = assets[target][tplPath];
+        var updatedAssetsDetails = uniqUpdatedAssets.map(files.details);
+        // delete old timestamped assets
+        updatedAssetsDetails.forEach(files.deleteOld);
+        // generate a new timestamped version of the asset
+        updatedAssetsDetails.forEach(files.timestamp);
 
-            // iterate through each asset on the template
-            _.each(tplAssets, function (oldInfo, assetPath) {
-                var info = files.getInfo(assetPath);
-
-                // compare current file contents against the ones stored on the 'minified_timestamps_getinfo' task,
-                if (info.content !== oldInfo.content) {
-                    grunt.log.ok('This asset has changed: ' + chalk.green(assetPath));
-
-                    // check if the asset has already been updated on another template before updating its timestamp
-                    if (!updated.hasOwnProperty(info.realPath)) {
-                        var newPath = timestamp.update(tplPath, assetPath);
-
-                        // store the new asset path in case it is also present on other templates
-                        // use the real path (the parent minified file) as the key, so in case there are templates with
-                        // uncoordinated timestamps for a given asset, they'll all end up with the same
-                        updated[info.realPath] = newPath;
-                    } else {
-                        // reuse details from a previous update
-                        timestamp.update(tplPath, assetPath, updated[info.realPath]);
-                    }
-                }
-            });
-        });
+        // update the assets on the template
+        _.each(assets[this.target], assetCollector.updateAssetPaths.bind(uniqUpdatedAssets));
     });
 };

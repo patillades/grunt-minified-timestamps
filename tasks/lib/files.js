@@ -115,7 +115,7 @@ module.exports = function (grunt, options) {
     };
 
     /**
-     * Return the details of a file
+     * Return the details of a file needed to delete its old timestamped versions and generate a new one
      *
      * @param {String} path
      * @returns {Object}
@@ -143,16 +143,15 @@ module.exports = function (grunt, options) {
         return {
             dir: dir,
             fileWoutExtension: fileWoutExtension,
-            uglified: dir + '/' + fileWoutExtension + '.' + extension,
             extension: extension,
-            oldPath: realPath,
+            uglified: dir + '/' + fileWoutExtension + '.' + extension,
             newPath:  dir + '/' + fileWoutExtension + '.' + timestamp + '.' + extension,
             tplRegExp: tplRegExp
         };
     };
 
     /**
-     * Delete previous versions (file.min.123.js) of a given minified file (file.min.js)
+     * Delete all previous versions (file.min.123.js) of a given minified file (file.min.js) found inside its folder
      *
      * @param {Object} file
      */
@@ -179,12 +178,31 @@ module.exports = function (grunt, options) {
         grunt.file.copy(file.uglified, file.newPath);
     };
 
+    /**
+     * Rewrite a template with the new timestamped path of a given asset
+     *
+     * @param {String} tplPath Path of the template where the assets' sources will be updated
+     * @param {String} assetPath Path of the asset on the template
+     */
+    var updateAssetOnTemplate = function (tplPath, assetPath) {
+        var content = grunt.file.read(tplPath);
+        var assetDetails = details(assetPath);
+
+        grunt.file.write(
+            tplPath, content.replace(
+                assetDetails.tplRegExp,
+                assetDetails.newPath.replace(options.assetPath, '')
+            )
+        );
+    };
+
     return {
         details: details,
         getInfo: getInfo,
         deleteOld: deleteOld,
         timestamp: timestamp,
         hasChanged: hasChanged,
+        updateAssetOnTemplate: updateAssetOnTemplate,
         // only returned for testing purposes
         resolveAssetPath: resolveAssetPath
     };
