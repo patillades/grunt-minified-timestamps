@@ -118,16 +118,18 @@ module.exports = function (grunt, options) {
     };
 
     /**
-     * Check if a template contains updated assets, and update their sources
+     * Check if a template contains updated assets, and if so update those assets with the new minified timestamp
      *
-     * @param {Array} updatedAssets Assets that have been updated and need a new timestamped source on the template
-     * @param {Object} assetsInfo Associative array of assets, of the kind returned by the "getAssetsInfo" function
+     * @param {Object} updatedAssets Assets that have been updated and need a new timestamped source on the template,
+     * the key is the asset path and the value the details of that file
+     * @param {Object} assetsInfo Associative array of assets on the given template,
+     * of the kind returned by the "getAssetsInfo" function
      * @param {String} tplPath Path of the template where the assets' sources will be updated
      */
     var updateAssetPaths = function (updatedAssets, assetsInfo, tplPath) {
         for (var assetPath in assetsInfo) {
-            if (_.contains(updatedAssets, assetPath)) {
-                files.updateAssetOnTemplate(tplPath, assetPath);
+            if (updatedAssets.hasOwnProperty(assetPath)) {
+                files.updateAssetOnTemplate(tplPath, assetPath, updatedAssets[assetPath]);
             }
         }
     };
@@ -136,6 +138,7 @@ module.exports = function (grunt, options) {
         // only returned for testing purposes
         getAssets: getAssets,
         getAssetsInfo: getAssetsInfo,
-        getUpdatedAssets: getUpdatedAssets
+        getUpdatedAssets: getUpdatedAssets,
+        updateAssetPaths: updateAssetPaths
     };
 };

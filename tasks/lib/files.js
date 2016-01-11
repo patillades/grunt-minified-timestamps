@@ -183,10 +183,10 @@ module.exports = function (grunt, options) {
      *
      * @param {String} tplPath Path of the template where the assets' sources will be updated
      * @param {String} assetPath Path of the asset on the template
+     * @param {Object} assetDetails Details of the given asset, of the kind returned by the "details" function
      */
-    var updateAssetOnTemplate = function (tplPath, assetPath) {
+    var updateAssetOnTemplate = function (tplPath, assetPath, assetDetails) {
         var content = grunt.file.read(tplPath);
-        var assetDetails = details(assetPath);
 
         grunt.file.write(
             tplPath, content.replace(

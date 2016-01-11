@@ -32,17 +32,17 @@ module.exports = function(grunt) {
         var options = this.options({
             // path where the assets are located, relative to the Gruntfile dir; it must always end in "/"
             assetPath: '/',
-            // the default values are provided below, so they don't get overwritten
-            regExps: []
+            // providing new regular expressions will overwrite the default ones, it's done this way because
+            // concatenating the regExps in the options with the default ones would likely provide duplicate matches
+            regExps: [
+                // get the content of "src", the decimal point is there to match other attributes (e.g. type)
+                // make sure it's a js file
+                /<script.+src="(.+?\.js.*?)"/gi,
+                // get the content of "href", the decimal point is there to match other attributes (e.g. rel, media)
+                // avoid links with non-stylesheet rel tags
+                /<link.+(?:rel="(?!canonical|alternate|icon)).+href="(.+?)"/gi
+            ]
         });
-
-        // concat the default regular expressions to any that might be provided by the task
-        options.regExps = options.regExps.concat([
-            // get the content of "src", the decimal point is there to match other attributes (e.g. type)
-            /<script.+src="(.+?)"/gi,
-            // get the content of "href", the decimal point is there to match other attributes (e.g. rel, media)
-            /<link.+href="(.+?)"/gi
-        ]);
 
         // load modules
         assetCollector = require('./lib/assetCollector')(grunt, options);
@@ -69,17 +69,31 @@ module.exports = function(grunt) {
         grunt.log.subhead('Looking for changes since the ' + chalk.underline('"minified_timestamps_getinfo"') + ' task');
 
         // get the updated assets on all the templates of this target
-        var updatedAssets = _.each(assets[this.target], assetCollector.getUpdatedAssets);
-        // remove duplicates
-        var uniqUpdatedAssets = _.uniq(updatedAssets);
+        var updatedAssets = _.map(assets[this.target], assetCollector.getUpdatedAssets);
 
-        var updatedAssetsDetails = uniqUpdatedAssets.map(files.details);
+        // flatten the depth of the array and remove duplicates
+        var uniqUpdatedAssets = _.uniq(
+            _.flatten(updatedAssets)
+        );
+
+        // create an object with the assets as keys, and its details as values
+        // (it's important to keep the details because each time the function is called generates a different timestamp,
+        // so the calls to files.timestamp and assetCollector.updateAssetPaths need to use the same value)
+        var updatedAssetsDetails = _.object(
+            uniqUpdatedAssets,
+            uniqUpdatedAssets.map(files.details)
+        );
+
         // delete old timestamped assets
-        updatedAssetsDetails.forEach(files.deleteOld);
-        // generate a new timestamped version of the asset
-        updatedAssetsDetails.forEach(files.timestamp);
+        _.each(updatedAssetsDetails, files.deleteOld);
 
-        // update the assets on the template
-        _.each(assets[this.target], assetCollector.updateAssetPaths.bind(uniqUpdatedAssets));
+        // generate a new timestamped version of the asset
+        _.each(updatedAssetsDetails, files.timestamp);
+
+        // for each template, set the new timestamp of each updated asset
+        _.each(
+            assets[this.target],
+            assetCollector.updateAssetPaths.bind(null, updatedAssetsDetails)
+        );
     });
 };
