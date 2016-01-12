@@ -12,7 +12,7 @@ describe('assetCollector library', function () {
     describe('getAssets function', function () {
         describe('Template with 1 empty css', function () {
             // the template path is relative to the Gruntfile
-            var content = grunt.file.read('test/fixtures/tpl_with_empty_css.html');
+            var content = grunt.file.read(options.assetPath + 'tpl_with_empty_css.html');
 
             it('should find no js files', function () {
                 // script regexp
@@ -34,7 +34,7 @@ describe('assetCollector library', function () {
 
         describe('Template with various <link> tags', function () {
             // the template path is relative to the Gruntfile
-            var content = grunt.file.read('test/fixtures/tpl_with_various_unexistant_css.html');
+            var content = grunt.file.read(options.assetPath + 'tpl_with_various_unexistant_css.html');
 
             it('should find no js assets', function () {
                 // script regexp
@@ -55,7 +55,7 @@ describe('assetCollector library', function () {
 
         describe('Template with 1 empty js', function () {
             // the template path is relative to the Gruntfile
-            var content = grunt.file.read('test/fixtures/tpl_with_empty_js.html');
+            var content = grunt.file.read(options.assetPath + 'tpl_with_empty_js.html');
 
             it('should return 1 js asset', function () {
                 // script regexp
@@ -77,7 +77,7 @@ describe('assetCollector library', function () {
 
         describe('Template with various <script> tags', function () {
             // the template path is relative to the Gruntfile
-            var content = grunt.file.read('test/fixtures/tpl_with_various_unexistant_js.html');
+            var content = grunt.file.read(options.assetPath + 'tpl_with_various_unexistant_js.html');
 
             it('should return 3 js assets', function () {
                 // script regexp
@@ -99,7 +99,7 @@ describe('assetCollector library', function () {
 
     describe('getAssetsInfo function', function () {
         it('should return false if template is not found', function () {
-            var tpl = 'test/fixtures/unexisting.html';
+            var tpl = options.assetPath + 'unexisting.html';
 
             var result = assetCollector.getAssetsInfo(tpl);
 
@@ -108,7 +108,7 @@ describe('assetCollector library', function () {
 
         describe('Template with 1 empty css', function () {
             it('should return an object with the assets info', function () {
-                var tpl = 'test/fixtures/tpl_with_empty_css.html';
+                var tpl = options.assetPath + 'tpl_with_empty_css.html';
 
                 var result = assetCollector.getAssetsInfo(tpl);
 
@@ -123,7 +123,7 @@ describe('assetCollector library', function () {
 
         describe('Template with external assets', function () {
             it('should return an empty object', function () {
-                var tpl = 'test/fixtures/tpl_with_external_assets.html';
+                var tpl = options.assetPath + 'tpl_with_external_assets.html';
 
                 var result = assetCollector.getAssetsInfo(tpl);
 

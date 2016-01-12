@@ -40,7 +40,7 @@ module.exports = function(grunt) {
                 /<script.+src="(.+?\.js.*?)"/gi,
                 // get the content of "href", the decimal point is there to match other attributes (e.g. rel, media)
                 // avoid links with non-stylesheet rel tags
-                /<link.+(?:rel="(?!canonical|alternate|icon)).+href="(.+?)"/gi
+                /<link.+(?:rel="(?!canonical|alternate|icon))?.*href="(.+?)"/gi
             ]
         });
 
