@@ -7,7 +7,7 @@ var _ = require('underscore');
 var options = require('./fixtures/options');
 
 // this test suite is on a different folder, so we need to update the asset path
-options.assetPath += '/update/';
+options.assetPath += 'update/';
 
 var assetCollector = require('./../tasks/lib/assetCollector')(grunt, options);
 var files = require('./../tasks/lib/files')(grunt, options);
@@ -15,8 +15,6 @@ var files = require('./../tasks/lib/files')(grunt, options);
 describe('update task', function () {
     // the template path is relative to the Gruntfile
     var tpl = 'test/fixtures/update/tpl.html';
-
-    var content = grunt.file.read(tpl);
 
     var assets = _.object([tpl], [assetCollector.getAssetsInfo(tpl)]);
 
@@ -101,8 +99,37 @@ describe('update task', function () {
         });
 
         describe('set the new timestamped asset on the template', function () {
-            it('', function () {
-                assetCollector.updateAssetPaths(updatedAssetsDetails, assets[tpl], tpl)
+            var tplContentBefore;
+
+            before(function () {
+                tplContentBefore = grunt.file.read(tpl);
+            });
+
+            it('should replace the asset path on the template', function () {
+                assert.notEqual(-1, tplContentBefore.indexOf(assetPathOnTpl));
+
+                assetCollector.updateAssetPaths(updatedAssetsDetails, assets[tpl], tpl);
+
+                var tplContentAfter = grunt.file.read(tpl);
+
+                assert.deepEqual(
+                    -1,
+                    tplContentAfter.indexOf(assetPathOnTpl),
+                    'The original asset is not on the template anymore'
+                );
+
+                var newAssetPath = updatedAssetsDetails[assetPathOnTpl].newPath.replace(options.assetPath, '');
+
+                assert.notEqual(
+                    -1,
+                    tplContentAfter.indexOf(newAssetPath),
+                    'The new path is found on the template'
+                );
+            });
+
+            // restore the content of the template
+            after(function () {
+                grunt.file.write(tpl, tplContentBefore);
             });
         });
 

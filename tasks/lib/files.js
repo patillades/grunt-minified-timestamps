@@ -136,6 +136,7 @@ module.exports = function (grunt, options) {
 
         var timestamp = Date.now();
 
+        // regular expression to find the asset call on the template
         var tplRegExp = new RegExp(
             realPath.replace(options.assetPath, '')
         );
