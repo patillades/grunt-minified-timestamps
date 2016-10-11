@@ -1,7 +1,7 @@
 /* global module, require */
 /*
  * grunt-minified-timestamps
- * https://github.com/patillades/gruntplugin
+ * https://github.com/patillades/grunt-minified-timestamps
  *
  * Copyright (c) 2014 patillades
  * Licensed under the MIT license.

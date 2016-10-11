@@ -87,11 +87,9 @@ module.exports = function (grunt, options) {
         );
 
         // filter out the assets whose value is FALSE (files not found)
-        var cleanData = _.pick(data, function (value, key, object) {
+        return _.pick(data, function (value, key, object) {
             return value !== false;
         });
-
-        return cleanData;
     };
 
     /**
