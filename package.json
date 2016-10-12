@@ -1,22 +1,25 @@
 {
   "name": "grunt-minified-timestamps",
-  "version": "1.0.0",
-  "description": "Add a timestamp to your minified assets after they have been updated by other grunt tasks",
+  "version": "0.0.1",
+  "description": "Cache bust your assets by adding a timestamp after they have been minified by other grunt tasks, works with Symfony2",
   "keywords": [
     "timestamp",
     "minified",
     "assets"
   ],
+  "main": "tasks/minified_timestamps.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/patillades/grunt-minified-timestamps"
+  },
+  "scripts": {
+    "test": "grunt test"
+  },
   "author": {
     "name": "Xavier Lozano Carreras",
     "url": "https://github.com/patillades"
   },
-  "files": [
-    "tasks"
-  ],
-  "scripts": {
-    "test": "grunt test"
-  },
+  "license": "MIT",
   "dependencies": {
     "chalk": "1.x",
     "underscore": "1.x"
