@@ -14,7 +14,7 @@ describe('files library', function () {
 
             var result = files.resolveAssetPath(helper);
 
-            assert.deepEqual(result, options.assetPath + 'empty.css');
+            assert.deepEqual(result, options.assetsPath + 'empty.css');
         });
 
         it('should extract the asset path from symfony helper function, removing double slashes', function () {
@@ -22,7 +22,7 @@ describe('files library', function () {
 
             var result = files.resolveAssetPath(helper);
 
-            assert.deepEqual(result, options.assetPath + 'empty.css');
+            assert.deepEqual(result, options.assetsPath + 'empty.css');
         });
 
         it('should add the gruntfile relative path to the asset', function () {
@@ -30,7 +30,7 @@ describe('files library', function () {
 
             var result = files.resolveAssetPath(asset);
 
-            assert.deepEqual(result, options.assetPath + 'empty.css');
+            assert.deepEqual(result, options.assetsPath + 'empty.css');
         });
 
         it('should add the gruntfile relative path to the asset, removing double slashes', function () {
@@ -38,7 +38,7 @@ describe('files library', function () {
 
             var result = files.resolveAssetPath(asset);
 
-            assert.deepEqual(result, options.assetPath + 'empty.css');
+            assert.deepEqual(result, options.assetsPath + 'empty.css');
         });
     });
 
@@ -73,7 +73,7 @@ describe('files library', function () {
             var result = files.getInfo(file);
 
             assert.deepEqual(result.content, '');
-            assert.deepEqual(result.realPath, options.assetPath + file);
+            assert.deepEqual(result.realPath, options.assetsPath + file);
         });
 
         it('should return non-timestamped info object if file exists', function () {
@@ -81,7 +81,7 @@ describe('files library', function () {
 
             var result = files.getInfo(file);
 
-            assert.deepEqual(result.realPath, options.assetPath + 'empty.min.js');
+            assert.deepEqual(result.realPath, options.assetsPath + 'empty.min.js');
         });
     })
 });

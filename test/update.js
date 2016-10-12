@@ -7,7 +7,7 @@ var _ = require('underscore');
 var options = require('./fixtures/options');
 
 // this test suite is on a different folder, so we need to update the asset path
-options.assetPath += 'update/';
+options.assetsPath += 'update/';
 
 var assetCollector = require('./../tasks/lib/assetCollector')(grunt, options);
 var files = require('./../tasks/lib/files')(grunt, options);
@@ -28,7 +28,7 @@ describe('update task', function () {
     });
 
     describe('css asset updated', function () {
-        var minFile = options.assetPath + 'style.min.css';
+        var minFile = options.assetsPath + 'style.min.css';
         // this is the minified asset called on the template
         var assetPathOnTpl = 'style.min.123.css';
         var originalMin;
@@ -68,20 +68,20 @@ describe('update task', function () {
 
             // keep the asset contents
             before(function () {
-                assetContents = grunt.file.read(options.assetPath + assetPathOnTpl);
+                assetContents = grunt.file.read(options.assetsPath + assetPathOnTpl);
             });
 
             it('should delete old assets', function () {
-                assert(grunt.file.exists(options.assetPath + assetPathOnTpl));
+                assert(grunt.file.exists(options.assetsPath + assetPathOnTpl));
 
                 _.each(updatedAssetsDetails, files.deleteOld);
 
-                assert.deepEqual(grunt.file.exists(options.assetPath + assetPathOnTpl), false);
+                assert.deepEqual(grunt.file.exists(options.assetsPath + assetPathOnTpl), false);
             });
 
             // rewrite the file to keep the status quo
             after(function () {
-                grunt.file.write(options.assetPath + assetPathOnTpl, assetContents);
+                grunt.file.write(options.assetsPath + assetPathOnTpl, assetContents);
             });
         });
 
@@ -118,7 +118,7 @@ describe('update task', function () {
                     'The original asset is not on the template anymore'
                 );
 
-                var newAssetPath = updatedAssetsDetails[assetPathOnTpl].newPath.replace(options.assetPath, '');
+                var newAssetPath = updatedAssetsDetails[assetPathOnTpl].newPath.replace(options.assetsPath, '');
 
                 assert.notEqual(
                     -1,

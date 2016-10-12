@@ -1,201 +1,225 @@
 /* global module, require */
 
 var fs = require('fs');
+var path = require('path');
 var chalk = require('chalk');
 
 module.exports = function (grunt, options) {
-    'use strict';
+    /**
+     * Object storing the info of a given asset
+     *
+     * @typedef {Object} AssetInfo
+     * @property {String} content - content of the asset
+     * @property {String} realPath - real path where the asset file is located
+     */
 
     /**
      * Get the asset info, specifically the last modified time and its
      * contents, if the file exists
      *
-     * @param {String} path The path of an asset file
+     * @param {AssetPath} assetPath
      *
-     * @returns {Object|boolean} FALSE if the path belongs to an external file, or if a file was not found on the system;
-     * in that second case, emit a "fileMissing" event so the main task can abort with a fatal error.
-     * When the file is found, an object with "mtime" ({Date} Time when file data last modified),
-     * "content" (file content), and "realPath" (if the asset is timestamped, the parent minified file path) properties
+     * @returns {boolean|AssetInfo} FALSE if the path belongs to an external file, or was not found
+     * on the system. When the file is found, an object with "content" (file content), and
+     * "realPath" (if the asset is timestamped, the parent minified file path) properties
      */
-    var getInfo = function (path) {
-        if (isExternal(path)) {
-            grunt.log.writeln('  - No info for external file: ' + chalk.yellow(path));
+    function getInfo(assetPath) {
+        if (isExternal(assetPath)) {
+            grunt.log.writeln('  - No info for external file: ' + chalk.yellow(assetPath));
 
             return false;
         }
 
-        var assetPath = resolveAssetPath(path);
+        var resolvedPath = resolveAssetPath(assetPath);
 
         // make sure that the asset file exists
-        if (!grunt.file.exists(assetPath)) {
-            grunt.log.writeln(chalk.red('Asset not found: ' + assetPath));
-
-            grunt.event.emit('fileMissing');
-
-            return false;
+        if (!grunt.file.exists(resolvedPath)) {
+            return missingFile('Asset', resolvedPath);
         }
 
         // remove the timestamp (if there's one) to get the info on the parent file;
         // this way we can compare if a file has been updated on the minification tasks
         // e.g. gruntfile/relative/path/style.min.123.css -> gruntfile/relative/path/style.min.css
-        var realPath = assetPath.replace(/\.min\.\d+\./, '.min.');
+        var realPath = resolvedPath.replace(/\.min\.\d+\./, '.min.');
 
-        // try/catch because an exception is thrown for files not found (checked once for assetPath, now for realPath)
+        // try/catch because an exception is thrown for files not found (checked once for
+        // resolvedPath, now for realPath)
         try {
-            // get file info
-            var stats = fs.statSync(realPath);
+            // check file existence
+            fs.statSync(realPath);
 
             return {
-                mtime: stats.mtime,
                 content: grunt.file.read(realPath),
-                realPath: realPath
+                realPath
             };
         } catch (e) {
-            grunt.log.writeln(chalk.red('Asset not found: ' + realPath));
-
-            grunt.event.emit('fileMissing');
-
-            return false;
+            return missingFile('Asset', realPath);
         }
-    };
+    }
 
     /**
-     * Tell whether an asset is external to the file system, checking if it starts by "http", "https", or "//"
+     * Emit a "fileMissing" event so the main task can abort with a fatal error if a file is not
+     * found.
      *
-     * @param {String} path
+     * @fires EventEmitter#fileMissing
+     * @event EventEmitter#fileMissing
+     *
+     * @param {String} fileType
+     * @param {String} filePath
      * @returns {boolean}
      */
-    var isExternal = function (path) {
-        return /^(http(s)?:)?\/\//.test(path);
-    };
+    function missingFile(fileType, filePath) {
+        grunt.log.writeln(chalk.red(fileType + ' not found: ' + filePath));
+
+        grunt.event.emit('fileMissing');
+
+        return false;
+    }
+
+    /**
+     * Tell whether an asset is external to the file system, checking if it starts by "http",
+     * "https", or "//"
+     *
+     * @param {AssetPath} assetPath
+     * @returns {boolean}
+     */
+    function isExternal(assetPath) {
+        return /^(http(s)?:)?\/\//.test(assetPath);
+    }
 
     /**
      * Translate the asset path found on the template, to the path relative to the Gruntfile.
      * Get the asset path from symfony helper calls if they are used
      *
-     * @param {String} path The asset path as found on the template
+     * @param {AssetPath} assetPath
      * @returns {String} The real asset path on the filesystem (relative to the Grunfile)
      */
-    var resolveAssetPath = function(path) {
-        var cleanPath = getPathFromSymfonyAssetCall(path);
+    function resolveAssetPath(assetPath) {
+        var cleanPath = getPathFromSymfonyAssetCall(assetPath);
 
         // add the asset path and make sure there are no double slashes
         // (happens when the asset is declared like src="/file.ext")
-        return (options.assetPath + cleanPath).replace('//', '/');
-    };
+        return (options.assetsPath + cleanPath).replace('//', '/');
+    }
 
     /**
-     * If the asset path is a helper call used on the symfony templates (e.g. {{ asset('relative/file/path') }}),
-     * get the real path out of it. Otherwise, return the path as it is
+     * If the asset path is a helper call used on the symfony templates
+     * (e.g. {{ asset('relative/file/path') }}), get the real path out of it. Otherwise, return
+     * the path as it is
      *
-     * @param {String} path
+     * @param {AssetPath} assetPath
      * @returns {String}
      */
-    var getPathFromSymfonyAssetCall = function (path) {
-        var result = /^{{\s*asset\(['"](.+)['"]\)\s*}}$/i.exec(path);
+    function getPathFromSymfonyAssetCall(assetPath) {
+        var result = /^{{\s*asset\(['"](.+)['"]\)\s*}}$/i.exec(assetPath);
 
         if (result === null) {
-            return path;
+            return assetPath;
         }
 
         return result[1];
-    };
+    }
 
     /**
      * Compare the updated info of an asset to see if it has changed compared to the provided data
      *
-     * @param {Object} oldInfo File information object, of the kind returned by the "getInfo" function
-     * @param {String} path The path of the asset file
+     * @param {AssetInfo} oldInfo
+     * @param {AssetPath} assetPath
      * @returns {boolean}
      */
-    var hasChanged = function (oldInfo, path) {
-        var info = getInfo(path);
+    function hasChanged(oldInfo, assetPath) {
+        var info = getInfo(assetPath);
 
         return info.content !== oldInfo.content;
-    };
+    }
 
     /**
-     * Return the details of a file needed to delete its old timestamped versions and generate a new one
+     * Details of a given asset file
      *
-     * @param {String} path
-     * @returns {Object}
+     * @typedef {Object} AssetDetails
+     * @property {String} dir - Directory where the asset is located (relative to the Gruntfile)
+     * @property {String} uglified - Path of the uglified asset
+     * @property {String} newPath - Path where the new uglified and timestamped asset will be
+     * located
+     * @property {RegExp} tplRegExp - Regex to find the asset call on the template
+     * @property {RegExp} oldAssetsRegExp - Regex to find the old timestamped versions of the asset
      */
-    var details = function (path) {
-        var realPath = resolveAssetPath(path);
 
-        var lastSlash = realPath.lastIndexOf('/');
+    /**
+     * Return the details of a file needed to delete its old timestamped versions and generate a
+     * new one
+     *
+     * @param {AssetPath} assetPath
+     * @returns {AssetDetails}
+     */
+    function details(assetPath) {
+        var realPath = resolveAssetPath(assetPath);
 
-        var dir = realPath.substr(0, lastSlash);
-        var file = realPath.substr(lastSlash + 1);
+        var parsed = path.parse(realPath);
 
-        var lastDot = file.lastIndexOf('.');
+        var lastDot = parsed.base.lastIndexOf('.');
 
         // remove the extension and the timestamp
-        var fileWoutExtension = file.substr(0, lastDot).replace(/min\.\d+/, 'min');
-        var extension = file.substr(lastDot + 1);
+        var fileWoutExtension = parsed.base.substr(0, lastDot).replace(/min\.\d+/, 'min');
 
-        var timestamp = Date.now();
-
-        // regular expression to find the asset call on the template
         var tplRegExp = new RegExp(
-            realPath.replace(options.assetPath, '')
+            realPath.replace(options.assetsPath, '')
+        );
+
+        var oldAssetsRegExp = new RegExp(
+            parsed.dir + '\/' + fileWoutExtension.replace('.', '\\.') + '\\.\\d+\\' + parsed.ext
         );
 
         return {
-            dir: dir,
-            fileWoutExtension: fileWoutExtension,
-            extension: extension,
-            uglified: dir + '/' + fileWoutExtension + '.' + extension,
-            newPath:  dir + '/' + fileWoutExtension + '.' + timestamp + '.' + extension,
-            tplRegExp: tplRegExp
+            dir: parsed.dir,
+            uglified: parsed.dir + '/' + fileWoutExtension + parsed.ext,
+            newPath:  parsed.dir + '/' + fileWoutExtension + '.' + Date.now() + parsed.ext,
+            tplRegExp,
+            oldAssetsRegExp
         };
-    };
+    }
 
     /**
-     * Delete all previous versions (file.min.123.js) of a given minified file (file.min.js) found inside its folder
+     * Delete all previous versions (file.min.123.js) of a given minified asset (file.min.js) found
+     * inside its folder
      *
-     * @param {Object} file
+     * @param {AssetDetails} asset
      */
-    var deleteOld = function (file) {
-        var regex = new RegExp(
-            file.dir + '\/' + file.fileWoutExtension.replace('.', '\\.') + '\\.\\d+\\.' + file.extension
-        );
-
-        grunt.file.recurse(file.dir, function (abspath) {
-            if (regex.test(abspath)) {
-                grunt.log.writeln('    - Deleting old timestamped file: ' + chalk.red(abspath));
+    function deleteOld(asset) {
+        grunt.file.recurse(asset.dir, function (abspath) {
+            if (asset.oldAssetsRegExp.test(abspath)) {
+                grunt.log.writeln('    - Deleting old timestamped asset: ' + chalk.red(abspath));
 
                 grunt.file.delete(abspath);
             }
         });
-    };
+    }
 
     /**
-     * Make a timestamped copy of the uglified file
+     * Make a timestamped copy of the uglified asset
      *
-     * @param {Object} file
+     * @param {AssetDetails} asset
      */
-    var timestamp = function (file) {
-        grunt.file.copy(file.uglified, file.newPath);
-    };
+    function timestamp(asset) {
+        grunt.file.copy(asset.uglified, asset.newPath);
+    }
 
     /**
      * Rewrite a template with the new timestamped path of a given asset
      *
-     * @param {String} tplPath Path of the template where the assets' sources will be updated
-     * @param {String} assetPath Path of the asset on the template
-     * @param {Object} assetDetails Details of the given asset, of the kind returned by the "details" function
+     * @param {TemplatePath} tplPath
+     * @param {AssetDetails} assetDetails
      */
-    var updateAssetOnTemplate = function (tplPath, assetPath, assetDetails) {
+    function updateAssetOnTemplate(tplPath, assetDetails) {
         var content = grunt.file.read(tplPath);
 
         grunt.file.write(
             tplPath, content.replace(
                 assetDetails.tplRegExp,
-                assetDetails.newPath.replace(options.assetPath, '')
+                assetDetails.newPath.replace(options.assetsPath, '')
             )
         );
-    };
+    }
 
     return {
         details: details,
@@ -203,6 +227,7 @@ module.exports = function (grunt, options) {
         deleteOld: deleteOld,
         timestamp: timestamp,
         hasChanged: hasChanged,
+        missingFile: missingFile,
         updateAssetOnTemplate: updateAssetOnTemplate,
         // only returned for testing purposes
         resolveAssetPath: resolveAssetPath

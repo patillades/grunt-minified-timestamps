@@ -7,8 +7,6 @@
  * Licensed under the MIT license.
  */
 
-'use strict';
-
 var _ = require('underscore');
 var chalk = require('chalk');
 
@@ -16,7 +14,19 @@ module.exports = function(grunt) {
     // external modules
     var assetCollector;
     var files;
-    // object that stores the various asset files found on each target
+
+    /**
+     * Store the assets found on a template
+     *
+     * @typedef {Object} TemplateAssets
+     * @type {Object.<TemplatePath, Object.<AssetPath, AssetInfo>>}
+     */
+
+    /**
+     * Store the assets found on each of the target's templates
+     *
+     * @type {Object.<string, TemplateAssets>}
+     */
     var assets = {};
 
     grunt.registerMultiTask('minified_timestamps_getinfo',
@@ -29,9 +39,9 @@ module.exports = function(grunt) {
         );
 
         // Merge task-specific and/or target-specific options with default values provided on a plain object
-        var options = this.options({
+        const options = this.options({
             // path where the assets are located, relative to the Gruntfile dir; it must always end in "/"
-            assetPath: '/',
+            assetsPath: '/',
             // providing new regular expressions will overwrite the default ones, it's done this way because
             // concatenating the regExps in the options with the default ones would likely provide duplicate matches
             regExps: [
@@ -76,9 +86,21 @@ module.exports = function(grunt) {
             _.flatten(updatedAssets)
         );
 
-        // create an object with the assets as keys, and its details as values
-        // (it's important to keep the details because each time the function is called generates a different timestamp,
-        // so the calls to files.timestamp and assetCollector.updateAssetPaths need to use the same value)
+        /**
+         * Store the details of some assets, using its path as the key
+         *
+         * @typedef {Object} AssetsDetails
+         * @type {Object.<AssetPath, AssetDetails>}
+         */
+
+        /**
+         * create an object with the assets as keys, and its details as values
+         * (it's important to keep the details because each time the function is called generates a
+         * different timestamp, so the calls to files.timestamp and assetCollector.updateAssetPaths
+         * need to use the same value)
+         *
+         * @type {AssetsDetails}
+         */
         var updatedAssetsDetails = _.object(
             uniqUpdatedAssets,
             uniqUpdatedAssets.map(files.details)

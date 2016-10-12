@@ -2,7 +2,7 @@
 
 module.exports = {
     // path where the assets are located, relative to the Gruntfile dir
-    assetPath: 'test/fixtures/',
+    assetsPath: 'test/fixtures/',
     regExps: [
         // get the content of "src", the decimal point is there to match other attributes (e.g. type)
         // make sure it's a js file
