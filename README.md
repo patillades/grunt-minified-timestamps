@@ -1,4 +1,4 @@
-# Grunt cache busting plugin for Symfony2
+# Grunt cache busting module for Symfony2
 
 This Grunt module allows you to cache bust static css and js files (also called assets) on a
 Symfony2 project.
@@ -16,6 +16,16 @@ it deletes the old timestamped versions of the assets, creates new ones with the
 of the assets.
 
 ##Usage
+
+This module is able to locate assets declared in the following ways, provided that they are all
+located on an `assetPath` that has to be declared on the task's `options`:
+
+* `<script src="{{ asset('js/jquery-2.1.4.min.js') }}"></script>`
+* `<script src="/js/sockjs-0.3.min.js"></script>`
+* `<link rel="stylesheet" href="{{ asset('css/style.css') }}"/>`
+* `<link rel="stylesheet" href="/css/style.css" />`
+
+This is how the `Gruntfile` will look like:
 
     module.exports = function(grunt) {
         var timestampsConfig = {
